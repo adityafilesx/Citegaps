@@ -9,7 +9,7 @@ Paste a URL (and optionally a target query). CiteGap fetches the live page the w
 
 ## How TinyFish is used
 
-Two endpoints, each earning its place. (A Browser API stage was evaluated and cut; see `DECISIONS.md`.)
+Two endpoints are core and verified in tests. An opt-in **deep mode** (`citegap audit --deep`, UI checkbox) adds the Browser API (remote Chromium over CDP) to find content that only appears after clicks/scroll and consent overlays. It is experimental, uses credits, and has not been validated live yet; see `DECISIONS.md`.
 
 | Call | Endpoint | Why |
 |---|---|---|

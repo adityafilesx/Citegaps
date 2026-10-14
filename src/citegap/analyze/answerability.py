@@ -49,7 +49,7 @@ def analyze_answerability(d: AuditData) -> list[Finding]:
             cf, p = comp_with_passage[0]
             out.append(Finding(
                 id="ANS_NO_PASSAGE", category="answerability", severity="high",
-                title=f"No passage on the page answers “{d.query}” — {len(comp_with_passage)} competitor{"s" if len(comp_with_passage) != 1 else ""} {"have" if len(comp_with_passage) != 1 else "has"} one",
+                title=f"No passage on the page answers “{d.query}” — {len(comp_with_passage)} competitor{'s' if len(comp_with_passage) != 1 else ''} {'have' if len(comp_with_passage) != 1 else 'has'} one",
                 evidence=[ev("metric", "TinyFish highlights for the target returned an empty array", hl.call_id),
                           ev("quote", f"{cf.url}: “{clip(p, 220)}”", hl.call_id)],
                 ai_impact="An answer engine asked this query finds nothing on your page to quote.",

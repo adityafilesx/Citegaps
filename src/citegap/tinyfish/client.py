@@ -69,6 +69,7 @@ class TinyFishClient:
         self.calls: list[CallLogEntry] = []
         self._search_bucket = TokenBucket(settings.search_rpm)
         self._fetch_bucket = TokenBucket(settings.fetch_upm)
+        self._browser_bucket = TokenBucket(10)
         self._http = httpx.AsyncClient(
             transport=transport,
             headers={"X-API-Key": settings.tinyfish_api_key, "User-Agent": "CiteGap/0.1"},
@@ -91,7 +92,7 @@ class TinyFishClient:
                        cost: float = 1.0) -> dict:
         if not self.s.tinyfish_api_key:
             raise TinyFishError(None, "missing_api_key", "TINYFISH_API_KEY is not set")
-        bucket = self._search_bucket if endpoint == "search" else self._fetch_bucket
+        bucket = {"search": self._search_bucket, "fetch": self._fetch_bucket}.get(endpoint, self._browser_bucket)
         entry = CallLogEntry(id=f"{endpoint[0]}-{uuid.uuid4().hex[:6]}", endpoint=endpoint,  # type: ignore[arg-type]
                              summary=summary, ttl=ttl,
                              started_at=datetime.now(timezone.utc).isoformat())
@@ -109,6 +110,11 @@ class TinyFishClient:
                 last = TinyFishError(None, "network_error", type(exc).__name__)
             else:
                 if resp.status_code < 400:
+                    if resp.status_code == 204 or not resp.content:
+                        entry.latency_ms = int((time.monotonic() - t0) * 1000)
+                        entry.status = "ok"
+                        self._log(entry)
+                        return {}
                     try:
                         data = resp.json()
                     except ValueError:
@@ -137,6 +143,14 @@ class TinyFishClient:
                                    summary or f"Search q={query[:60]!r} " + " ".join(
                                        f"{k}={v}" for k, v in params.items() if v not in (None, "")),
                                    params=p, timeout=self.s.search_client_timeout_s)
+
+    async def browser_create(self, url: str, *, timeout_seconds: int = 120) -> dict:
+        """Create a remote browser session (uses credits). Returns {session_id, cdp_url, base_url}."""
+        return await self._request("browser", "POST", self.s.browser_url, "Browser session (deep mode)",
+                                   json={"url": url, "timeout_seconds": timeout_seconds}, timeout=90.0)
+
+    async def browser_close(self, session_id: str) -> None:
+        await self._request("browser", "DELETE", f"{self.s.browser_url}/{session_id}", "Browser session close", timeout=30.0)
 
     async def fetch(self, body: dict, *, summary: str) -> dict:
         body = {**body, "ttl": 0}  # Rule 2: always live

@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from .analyze.access import analyze_access
+from .analyze.deep import analyze_deep
+from .collect.browser_deep import run_deep
 from .analyze.answerability import analyze_answerability
 from .analyze.bridge import build_bridges
 from .analyze.context import AuditData, ev
@@ -40,7 +42,7 @@ class AuditError(Exception):
 
 async def run_audit(url: str, query: Optional[str] = None, *, settings: Settings, client: Optional[TinyFishClient] = None,
                     emit: Optional[Emit] = None, raw_transport=None, resolver=None, audit_id: Optional[str] = None,
-                    store=None, llm_transport=None) -> Report:
+                    store=None, llm_transport=None, deep: bool = False, deep_driver=None) -> Report:
     t0 = time.monotonic()
     stage = {"name": "start"}
 
@@ -110,6 +112,16 @@ async def run_audit(url: str, query: Optional[str] = None, *, settings: Settings
             findings += fn(d)
         serp_findings, delta, extras = analyze_serp(d)
         findings += serp_findings
+        shot = None
+        if deep and not target.fully_failed:
+            E("browser", "Deep mode: opening the page in a remote browser (uses TinyFish credits; experimental)")
+            dres = await run_deep(client, final_url, deep_driver)
+            if dres.error:
+                d.notes.append(f"Deep mode did not complete ({dres.error}).")
+            else:
+                bcall = next((c.id for c in client.calls if c.endpoint == "browser"), None)
+                findings += analyze_deep(d, dres, bcall)
+                shot = dres.screenshot_jpeg_b64
         for c in comps:
             if c.error:
                 d.notes.append(f"Competitor {c.serp.url} could not be fetched ({c.error.error}); excluded from the delta.")
@@ -129,7 +141,9 @@ async def run_audit(url: str, query: Optional[str] = None, *, settings: Settings
             lint_dropped=dropped, target=tf, competitors=cfs, serp=serp.probes, delta_table=delta,
             domain_share=extras.get("domain_share"), what_ai_sees=build_what_ai_sees(d), serp_card=build_serp_card(d, serp),
             calls=list(client.calls), notes=d.notes)
-        rep.endpoints_used = {ep: sum(1 for c in rep.calls if c.endpoint == ep) for ep in ("search", "fetch")}
+        rep.endpoints_used = {ep: sum(1 for c in rep.calls if c.endpoint == ep) for ep in ("search", "fetch", "browser") if any(c.endpoint == ep for c in rep.calls)}
+        if shot:
+            rep.extras["screenshot_jpeg_b64"] = shot
         if store is not None:
             prev = store.previous_for(url)  # new report is saved after this, so the latest stored one is the prior run
             if prev:

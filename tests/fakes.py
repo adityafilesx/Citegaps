@@ -45,6 +45,11 @@ class FakeTinyFish:
         host = req.url.host
         if self.fail_status:
             return httpx.Response(self.fail_status, json={"error": {"code": "BOOM", "message": "forced"}})
+        if host == "api.browser.tinyfish.ai":
+            self.requests.append({"endpoint": "browser", "method": req.method, "path": req.url.path, "key": req.headers.get("x-api-key")})
+            if req.method == "DELETE":
+                return httpx.Response(204)
+            return httpx.Response(201, json={"session_id": "br-test-1", "cdp_url": "wss://fake/cdp", "base_url": "https://fake"})
         if host == "api.search.tinyfish.ai":
             params = {k: v[0] for k, v in parse_qs(req.url.query.decode()).items()}
             self.requests.append({"endpoint": "search", "params": params, "key": req.headers.get("x-api-key")})

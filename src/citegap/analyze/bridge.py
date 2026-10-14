@@ -39,7 +39,7 @@ def build_bridges(d: AuditData, findings: list[Finding]) -> list[Bridge]:
     js = by.get("EXTRACT_JS_DEPENDENT")
     if js and not_idx and d.serp.indexation == "partial":
         add(js, not_idx.id, "indexation",
-            f"Your content only exists after JavaScript runs. Search found {len(d.serp.domain_hits)} other page(s) on {d.serp.target_urls[0].split('/')[2]} but not this one.",
+            f"Your content only exists after JavaScript runs. Search found {len(d.serp.domain_hits)} other page{'s' if len(d.serp.domain_hits) != 1 else ''} on {d.serp.target_urls[0].split('/')[2]} but not this one.",
             "inferred", js.evidence[:1] + not_idx.evidence[:1])
 
     # 2. title rewritten <-> a title-quality problem on the page

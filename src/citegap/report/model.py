@@ -49,7 +49,7 @@ class Bridge(BaseModel):
 
 class CallLogEntry(BaseModel):
     id: str
-    endpoint: Literal["search", "fetch"]
+    endpoint: Literal["search", "fetch", "browser"]
     summary: str
     ttl: Optional[int] = None
     started_at: str

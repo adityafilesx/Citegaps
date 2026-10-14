@@ -35,6 +35,7 @@ class Settings:
     anthropic_api_key: str = ""
     search_url: str = "https://api.search.tinyfish.ai"
     fetch_url: str = "https://api.fetch.tinyfish.ai"
+    browser_url: str = "https://api.browser.tinyfish.ai"
     # Docs say 30/min default; plan conservatively for the 5/min free tier. Configurable.
     search_rpm: int = 5
     fetch_upm: int = 150

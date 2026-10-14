@@ -146,3 +146,7 @@ pre.snippet{background:var(--paper);border:1px solid var(--line);border-radius:v
 .snip-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:.8rem;color:var(--muted)}
 .foot{border-top:1px solid var(--line);padding:1.2rem clamp(1rem,4vw,3rem);color:var(--muted);font-size:.85rem}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.field.check{flex:0 0 auto;min-width:0;color:var(--ink);font-size:.85rem}.field.check input{width:auto;margin-right:.35rem}
+
+html,body{max-width:100%;overflow-x:clip}.meta,.verdict,.tag,.node{overflow-wrap:anywhere}@media (max-width:760px){.field{min-width:0}.top{gap:.4rem}}

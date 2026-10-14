@@ -30,11 +30,12 @@ WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 class AuditRequest(BaseModel):
     url: str
     query: Optional[str] = None
+    deep: bool = False
 
 
 class Job:
-    def __init__(self, job_id: str, url: str, query: Optional[str]):
-        self.id, self.url, self.query = job_id, url, query
+    def __init__(self, job_id: str, url: str, query: Optional[str], deep: bool = False):
+        self.id, self.url, self.query, self.deep = job_id, url, query, deep
         self.events: list[dict] = []
         self.done = False
         self.error: Optional[str] = None
@@ -91,7 +92,7 @@ def create_app(settings: Optional[Settings] = None, client_factory: Optional[Cal
         client = client_factory(settings) if client_factory else TinyFishClient(settings)
         try:
             rep = await run_audit(job.url, job.query, settings=settings, client=client, emit=job.add,
-                                  raw_transport=raw_transport, resolver=resolver, audit_id=job.id, store=store)
+                                  raw_transport=raw_transport, resolver=resolver, audit_id=job.id, store=store, deep=job.deep)
             store.save(rep)
             job.add({"stage": "report", "message": "Report ready", "report_id": rep.id})
             await job.finish()
@@ -104,8 +105,8 @@ def create_app(settings: Optional[Settings] = None, client_factory: Optional[Cal
         finally:
             await client.aclose()
 
-    def start(url: str, query: Optional[str]) -> Job:
-        job = Job(uuid.uuid4().hex[:10], url, (query or "").strip() or None)
+    def start(url: str, query: Optional[str], deep: bool = False) -> Job:
+        job = Job(uuid.uuid4().hex[:10], url, (query or "").strip() or None, deep)
         jobs[job.id] = job
         if len(jobs) > 200:
             for k in sorted(jobs, key=lambda k: jobs[k].created)[:50]:
@@ -131,7 +132,7 @@ def create_app(settings: Optional[Settings] = None, client_factory: Optional[Cal
         allowed, retry = limiter.allow(client_ip(request))
         if not allowed:
             return JSONResponse({"detail": "Rate limit exceeded. Try again later."}, status_code=429, headers={"Retry-After": str(retry)})
-        job = start(url, body.query)
+        job = start(url, body.query, body.deep)
         return {"id": job.id}
 
     @app.get("/audit/{job_id}/events")

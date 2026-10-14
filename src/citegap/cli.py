@@ -32,7 +32,7 @@ async def _audit(args: argparse.Namespace) -> int:
     store = Store(settings.db_path)
     try:
         rep = await run_audit(args.url if args.url.startswith("http") else "https://" + args.url, args.query, settings=settings,
-                              emit=None if args.quiet else _progress, store=store)
+                              emit=None if args.quiet else _progress, store=store, deep=args.deep)
     except (AuditError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--out", help="write report.md, report.json (and the fix pack) to this directory")
     a.add_argument("--fixpack", action="store_true", help="with --out: also write the fix pack zip")
     a.add_argument("--quiet", action="store_true")
+    a.add_argument("--deep", action="store_true", help="experimental: also open the page in a TinyFish remote browser (uses credits; needs citegap[deep])")
     s = sub.add_parser("serve", help="run the web app")
     s.add_argument("--host", default="0.0.0.0")
     s.add_argument("--port", type=int, default=8000)

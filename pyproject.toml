@@ -15,6 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+deep = ["playwright>=1.44"]
 
 [project.scripts]
 citegap = "citegap.cli:main"

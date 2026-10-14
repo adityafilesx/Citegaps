@@ -8,6 +8,7 @@
     ["search", "Search: rank, indexation, title and snippet"],
     ["competitors", "Fetch the top competitors"],
     ["answerability", "Find passages that answer the query"],
+    ["browser", "Deep mode: open the page in a remote browser"],
     ["analyze", "Analyze and link causes to symptoms"],
     ["score", "Score and build the report"],
   ];
@@ -32,7 +33,7 @@
   /* ---------- form + live run ---------- */
   $("form").addEventListener("submit", (e) => {
     e.preventDefault();
-    startAudit("/audit", { url: $("url").value.trim(), query: $("query").value.trim() || null });
+    startAudit("/audit", { url: $("url").value.trim(), query: $("query").value.trim() || null, deep: $("deep").checked });
   });
 
   async function startAudit(endpoint, body) {
@@ -142,7 +143,7 @@
     const head = h("div", {},
       h("p", { class: "verdict", text: verdict(r) }),
       h("p", { class: "meta" }, h("a", { href: r.url, target: "_blank", rel: "noopener noreferrer", text: r.url }),
-        ` · query “${r.query}”${r.query_derived ? " (derived)" : ""} · answerability via ${r.answerability_method} · ${r.duration_s}s · ${r.endpoints_used.fetch || 0} Fetch + ${r.endpoints_used.search || 0} Search calls`),
+        ` · query “${r.query}”${r.query_derived ? " (derived)" : ""} · answerability via ${r.answerability_method} · ${r.duration_s}s · ${r.endpoints_used.fetch || 0} Fetch + ${r.endpoints_used.search || 0} Search${r.endpoints_used.browser ? ` + ${r.endpoints_used.browser} Browser` : ""} calls`),
       h("div", { class: "actions" },
         h("a", { class: "btn primary", href: `/audit/${r.id}/fixpack.zip`, text: "Download fix pack" }),
         h("button", { class: "btn", type: "button", onclick: () => startAudit(`/audit/${r.id}/reaudit`, null), text: "Re-audit" }),
@@ -229,6 +230,7 @@
     const left = h("div", { class: "pane" }, h("h3", { text: "Original page" }), h("p", {}, h("a", { href: r.final_url || r.url, target: "_blank", rel: "noopener noreferrer", text: r.final_url || r.url })),
       h("p", { class: "legend", text: w ? `${w.rendered_chars.toLocaleString()} characters extracted; raw HTML (no JavaScript) holds ${w.raw_chars.toLocaleString()}.` : "" }), lost);
     const lines = w && w.lines.length ? w.lines.slice(0, 400).map((l) => h("div", { class: l.boilerplate ? "bp" : "", text: l.text })) : [h("div", { class: "empty", text: r.could_not_read ? "Fetch could not read this page." : "Empty extraction." })];
+    if (r.extras && r.extras.screenshot_jpeg_b64) left.append(h("h3", { text: "What a human sees on load" }), h("img", { alt: "Screenshot of the page as a browser rendered it on load", src: "data:image/jpeg;base64," + r.extras.screenshot_jpeg_b64, style: "max-width:100%;border:1px solid var(--line);border-radius:6px" }));
     sec.append(h("div", { class: "split" }, left, h("div", { class: "pane" }, h("h3", { text: "Extracted markdown" }), h("div", { class: "extract", tabindex: "0" }, lines))));
     return sec;
   }

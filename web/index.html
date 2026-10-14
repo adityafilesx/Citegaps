@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CiteGap — what AI can read vs. how you rank</title>
+<meta name="description" content="Paste a URL. CiteGap fetches it live like an AI tool, searches how it ranks, and connects the two.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/" aria-label="CiteGap home"><span class="brand-mark" aria-hidden="true"></span>CiteGap</a>
+  <p class="tag">Search shows how you rank. Fetch shows what AI can actually read.</p>
+</header>
+
+<main id="main">
+  <section id="intro" class="intro">
+    <h1>Where does AI lose your page, and does search notice?</h1>
+    <form id="form" class="audit-form" autocomplete="off">
+      <label class="field grow">
+        <span>Page URL</span>
+        <input id="url" name="url" type="text" inputmode="url" placeholder="https://example.com/blog/your-post" required>
+      </label>
+      <label class="field grow">
+        <span>Target query <em>(optional, derived from the page if empty)</em></span>
+        <input id="query" name="query" type="text" placeholder="robots.txt for ai crawlers">
+      </label>
+      <button id="go" class="btn primary" type="submit">Audit page</button>
+    </form>
+    <p id="form-error" class="error" role="alert" hidden></p>
+    <p class="fineprint">Every audit calls TinyFish Search and Fetch live (<code>ttl: 0</code>). Nothing is replayed or cached.</p>
+  </section>
+
+  <section id="run" class="run" hidden aria-live="polite">
+    <h2>Audit in progress</h2>
+    <ol id="stages" class="stages"></ol>
+    <div class="calllog-wrap">
+      <h3>TinyFish calls <span id="call-count" class="count"></span></h3>
+      <ul id="calls" class="calls"></ul>
+    </div>
+  </section>
+
+  <section id="report" class="report" hidden></section>
+</main>
+
+<footer class="foot">Built for the TinyFish × DTU SEO Page Auditor bounty. Findings are evidence-backed or dropped; links between readability and visibility are labelled <em>observed</em> or <em>inferred</em>.</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: citegap
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: TINYFISH_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CITEGAP_SEARCH_RPM
+        value: "5"
+      - key: CITEGAP_AUDITS_PER_HOUR
+        value: "10"
+    disk:
+      name: citegap-data
+      mountPath: /data
+      sizeGB: 1
